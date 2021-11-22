@@ -11,8 +11,8 @@ from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 
 
-def read_public_spreadsheets(file_url: str) -> pd.DataFrame:
-    """Read a publicly available Google Spreadsheet as a Pandas Dataframe.
+def read_public_sheets(file_url: str) -> pd.DataFrame:
+    """Read a publicly available Google Sheets file as a Pandas Dataframe.
 
     Parameters
     ----------
@@ -66,18 +66,18 @@ def read_public_file_from_gdrive(
         return json.load(request_str_io)
 
 
-def read_private_spreadsheets(
-    credentials_json: str, sheet_key: str, worksheet: int = 0
+def read_private_sheets(
+    credentials_json: str, sheet_url: str, worksheet: int = 0
 ) -> pd.DataFrame:
-    """Read a private available Google Spreadsheet as a Pandas Dataframe.
+    """Read a private available Google Sheets as a Pandas Dataframe.
 
     Parameters
     ----------
     credentials_json : str
         Path to JSON file with GCloud Credentials.
 
-    sheet_key : str
-        Key associated to the target spreadsheet.
+    sheet_url : str
+        Spreadheet URL adress.
 
     worksheet : int (default=0)
         Index or name for the target worksheet.
@@ -88,8 +88,11 @@ def read_private_spreadsheets(
         Dataframe loaded from the spreadsheet.
 
     """
+    # Parsing file URL
+    file_id = sheet_url.split("/")[-2]
+
     gcloud = gspread.service_account(filename=credentials_json)
-    sheet = gcloud.open_by_key(sheet_key)
+    sheet = gcloud.open_by_key(file_id)
     worksheet = sheet.get_worksheet(worksheet)
     list_rows_worksheet = worksheet.get_all_values()
     return pd.DataFrame(
@@ -98,18 +101,17 @@ def read_private_spreadsheets(
 
 
 def read_private_file_from_gdrive(
-    file_format: str, file_url: str, google_auth: GoogleAuth, **kwargs
+    file_url: str, file_format: str, google_auth: GoogleAuth, **kwargs
 ) -> Union[pd.DataFrame, Dict, str]:
     """Read private files from Google Drive.
 
     Parameters
     ----------
-    file_format : str
-        File format can be 'csv', 'xlsx', 'parquet', 'json' or 'txt'.
-
     file_url : str
         URL adress to file in Google Drive.
 
+    file_format : str
+        File format can be 'csv', 'xlsx', 'parquet', 'json' or 'txt'.
 
     google_auth: GoogleAuth
         Google Authentication object with access to target account. For more
@@ -149,12 +151,12 @@ def read_private_file_from_gdrive(
 
     elif file_format == "txt":
         byte_stream = content_io_buffer.read()
-        return binary_stream.decode("utf-8", **kwargs)
+        return byte_stream.decode("utf-8", **kwargs)
 
 
 def read_file_from_gcloud_storage(
-    file_format: str,
     file_name: str,
+    file_format: str,
     gcp_bucket: str,
     gcp_project: str,
     gcp_credentials_file: str,
@@ -164,11 +166,11 @@ def read_file_from_gcloud_storage(
 
     Parameters
     ----------
-    file_format : str
-        File format can be 'csv', 'xlsx', 'parquet', 'json' or 'txt'.
-
     file_name : str
         String with the name of the target file.
+
+    file_format : str
+        File format can be 'csv', 'xlsx', 'parquet', 'json' or 'txt'.
 
     gcp_bucket : str
         String with bucket name.
