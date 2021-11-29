@@ -130,3 +130,4 @@ dmypy.json
 
 # GCP Credentials
 client_secrets.json
+*.json
