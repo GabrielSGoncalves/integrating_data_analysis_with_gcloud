@@ -5,10 +5,10 @@ import pandas as pd
 import requests
 from bson import json_util
 import gspread
-from google.cloud import storage
-from google.oauth2 import service_account
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
+from google.cloud import storage
+from google.oauth2 import service_account
 
 
 def read_public_sheets(file_url: str) -> pd.DataFrame:
@@ -53,14 +53,13 @@ def read_public_file_from_gdrive(
         "https://drive.google.com/uc?export=download&id="
         + file_url.split("/")[-2]
     )
-
     request_str_io = StringIO(requests.get(download_url).text)
 
     if file_format == "csv":
         return pd.read_csv(request_str_io, **kwargs)
 
     elif file_format == "xlsx":
-        return pd.read_excel(request_str_io, **kwargs)
+        return pd.read_excel(download_url, **kwargs)
 
     elif file_format == "json":
         return json.load(request_str_io)
@@ -131,7 +130,6 @@ def read_private_file_from_gdrive(
 
     file = drive.CreateFile({"id": file_id})
 
-    # content_str_io = StringIO(file.GetContentString())
     content_io_buffer = file.GetContentIOBuffer()
 
     if file_format == "csv":
